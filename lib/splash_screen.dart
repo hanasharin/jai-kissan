@@ -1,97 +1,183 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'login_page.dart';
+import 'package:flutter/services.dart';
+import 'theme.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
-
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _fade;
+  late AnimationController _ctrl;
+  late Animation<double> _fade;
+  late Animation<double> _slide;
+  late Animation<double> _taglineFade;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..forward();
-    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
 
-    Timer(const Duration(seconds: 2), () {
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginPage()));
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
+    _fade = CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
+    );
+    _slide = Tween<double>(begin: 30, end: 0).animate(
+      CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
+      ),
+    );
+    _taglineFade = CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.4, 0.9, curve: Curves.easeOut),
+    );
+
+    _ctrl.forward();
+    Future.delayed(const Duration(milliseconds: 2800), () {
+      if (mounted) Navigator.pushReplacementNamed(context, '/login');
     });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final emerald = Theme.of(context).colorScheme.primary;
-    final beige = Theme.of(context).colorScheme.secondary;
-
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Container(color: emerald),
+          // 2.0-style: background image
+          Image.asset('assets/images/emarald.jpg', fit: BoxFit.cover),
+          // Emerald overlay
+          Container(color: JaikissanTheme.emerald.withOpacity(0.72)),
+
+          // Radial glows (1.0 style)
           Positioned(
-            top: -40,
-            left: -20,
-            child: _circle(beige.withOpacity(0.1), 180),
+            top: -100,
+            left: -60,
+            child: Container(
+              width: 380,
+              height: 380,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    JaikissanTheme.emeraldLight.withOpacity(0.25),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
           ),
           Positioned(
-            bottom: -50,
-            right: -40,
-            child: _circle(beige.withOpacity(0.08), 220),
+            bottom: -80,
+            right: -80,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    JaikissanTheme.sand.withOpacity(0.15),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
           ),
-          FadeTransition(
-            opacity: _fade,
+
+          // Center content with 1.0 animations
+          Center(
+            child: AnimatedBuilder(
+              animation: _ctrl,
+              builder: (_, _) => Opacity(
+                opacity: _fade.value,
+                child: Transform.translate(
+                  offset: Offset(0, _slide.value),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Logo — beige box like 2.0 buttons, eco icon like 1.0
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: JaikissanTheme.beige,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: const Icon(
+                          Icons.eco_rounded,
+                          color: JaikissanTheme.emerald,
+                          size: 44,
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      const Text(
+                        'Jai Kissan',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 38,
+                          fontWeight: FontWeight.w700,
+                          color: JaikissanTheme.beige,
+                          letterSpacing: -1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Opacity(
+                        opacity: _taglineFade.value,
+                        child: Text(
+                          'Smart Crop Intelligence',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            color: JaikissanTheme.beige.withOpacity(0.65),
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Version tag
+          Positioned(
+            bottom: 40,
+            left: 0,
+            right: 0,
             child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Jai Kisaan',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontSize: 32,
-                      color: beige,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  const SizedBox(
-                    width: 32,
-                    height: 32,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+              child: Text(
+                'v1.0',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12,
+                  color: JaikissanTheme.beige.withOpacity(0.25),
+                ),
               ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _circle(Color color, double size) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
     );
   }
 }

@@ -1,169 +1,265 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'login_page.dart'; // Import LoginPage for navigation
+import 'login_page.dart';
+import 'theme.dart';
 
-class SignUpPage extends StatelessWidget {
+class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
+  @override
+  State<SignUpPage> createState() => _SignUpPageState();
+}
+
+class _SignUpPageState extends State<SignUpPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _stateCtrl = TextEditingController();
+  final _districtCtrl = TextEditingController();
+  final _villageCtrl = TextEditingController();
+  final _landCtrl = TextEditingController();
+  final _cropCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  bool _obscure = true;
+  bool _loading = false;
+
+  @override
+  void dispose() {
+    for (final c in [
+      _nameCtrl,
+      _phoneCtrl,
+      _stateCtrl,
+      _districtCtrl,
+      _villageCtrl,
+      _landCtrl,
+      _cropCtrl,
+      _emailCtrl,
+      _passCtrl,
+    ]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void _register() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
+    await Future.delayed(const Duration(seconds: 1));
+    if (mounted) {
+      setState(() => _loading = false);
+      Navigator.pushReplacementNamed(context, '/login');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final emerald = Theme.of(context).colorScheme.primary;
-    final beige = Theme.of(context).colorScheme.secondary;
-
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background image
-          Image.asset('assets/images/emarald.jpg', fit: BoxFit.cover),
-          // Emerald overlay
-          Container(color: emerald.withOpacity(0.6)),
+          Image.asset('assets/images/dash.jpg', fit: BoxFit.cover),
+          Container(color: JaikissanTheme.emerald.withValues(alpha: 0.5)),
 
-          Center(
+          SafeArea(
             child: SingleChildScrollView(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 32),
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: emerald.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: beige.withOpacity(0.3)),
-                ),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Form(
+                key: _formKey,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 40),
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: JaikissanTheme.beige,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.eco_rounded,
+                        color: JaikissanTheme.emerald,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                     Text(
-                      'Sign Up',
+                      'Create\naccount.',
+                      style: Theme.of(context).textTheme.displayMedium
+                          ?.copyWith(
+                            height: 1.15,
+                            letterSpacing: -1.2,
+                            color: JaikissanTheme.beige,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Fill in your farm details to get started.',
                       style: TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: beige,
+                        color: JaikissanTheme.beige.withOpacity(0.65),
+                        fontSize: 14,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
 
-                    _buildTextField(
-                      'Farmer Name',
-                      'Enter your full name',
-                      Icons.person,
-                      beige,
+                    _SectionLabel('Personal Info'),
+                    const SizedBox(height: 12),
+                    GlassTextField(
+                      label: 'Full Name',
+                      controller: _nameCtrl,
+                      prefixIcon: Icons.person_outline_rounded,
+                      validator: (v) =>
+                          (v == null || v.isEmpty) ? 'Required' : null,
                     ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      'Age',
-                      'Enter your age',
-                      Icons.calendar_today,
-                      beige,
+                    const SizedBox(height: 12),
+                    GlassTextField(
+                      label: 'Email address',
+                      controller: _emailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      prefixIcon: Icons.mail_outline_rounded,
+                      validator: (v) => (v == null || !v.contains('@'))
+                          ? 'Valid email required'
+                          : null,
                     ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      'Gender',
-                      'Enter your gender',
-                      Icons.people,
-                      beige,
+                    const SizedBox(height: 12),
+                    GlassTextField(
+                      label: 'Phone Number',
+                      controller: _phoneCtrl,
+                      keyboardType: TextInputType.phone,
+                      prefixIcon: Icons.phone_outlined,
+                      validator: (v) =>
+                          (v == null || v.isEmpty) ? 'Required' : null,
                     ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      'Phone Number',
-                      'Enter your phone number',
-                      Icons.phone,
-                      beige,
+                    const SizedBox(height: 12),
+                    GlassTextField(
+                      label: 'Password',
+                      controller: _passCtrl,
+                      obscure: _obscure,
+                      prefixIcon: Icons.lock_outline_rounded,
+                      suffix: IconButton(
+                        icon: Icon(
+                          _obscure
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          color: JaikissanTheme.beige.withOpacity(0.6),
+                          size: 20,
+                        ),
+                        onPressed: () => setState(() => _obscure = !_obscure),
+                      ),
+                      validator: (v) => (v == null || v.length < 6)
+                          ? 'Min 6 characters'
+                          : null,
                     ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      'State',
-                      'Enter your state',
-                      Icons.map,
-                      beige,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      'District',
-                      'Enter your district',
-                      Icons.location_city,
-                      beige,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      'Village',
-                      'Enter your village',
-                      Icons.home,
-                      beige,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      'Land Size (in acres)',
-                      'Enter land size',
-                      Icons.landscape,
-                      beige,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      'Crop Preference',
-                      'Enter preferred crop',
-                      Icons.eco,
-                      beige,
-                    ),
-                    const SizedBox(height: 24),
 
-                    ElevatedButton(
-                      onPressed: () {
-                        // Navigate back to LoginPage after registration
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginPage(),
+                    const SizedBox(height: 24),
+                    _SectionLabel('Farm Details'),
+                    const SizedBox(height: 12),
+                    GlassTextField(
+                      label: 'State',
+                      controller: _stateCtrl,
+                      prefixIcon: Icons.map_outlined,
+                      validator: (v) =>
+                          (v == null || v.isEmpty) ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    GlassTextField(
+                      label: 'District',
+                      controller: _districtCtrl,
+                      prefixIcon: Icons.location_city_outlined,
+                      validator: (v) =>
+                          (v == null || v.isEmpty) ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    GlassTextField(
+                      label: 'Village',
+                      controller: _villageCtrl,
+                      prefixIcon: Icons.home_outlined,
+                      validator: (v) =>
+                          (v == null || v.isEmpty) ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    GlassTextField(
+                      label: 'Land Size (acres)',
+                      controller: _landCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      prefixIcon: Icons.landscape_outlined,
+                      validator: (v) =>
+                          (v == null || v.isEmpty) ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    GlassTextField(
+                      label: 'Crop Preference',
+                      controller: _cropCtrl,
+                      prefixIcon: Icons.eco_outlined,
+                      validator: (v) =>
+                          (v == null || v.isEmpty) ? 'Required' : null,
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: _loading ? null : _register,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: JaikissanTheme.beige,
+                          foregroundColor: JaikissanTheme.emerald,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: beige,
-                        foregroundColor: emerald,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                          textStyle: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
                         ),
-                      ),
-                      child: const Text(
-                        'Register',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.bold,
-                        ),
+                        child: _loading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: JaikissanTheme.emerald,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Create Account'),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Already have an account?",
-                          style: TextStyle(fontFamily: 'Poppins', color: beige),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            // Navigate to LoginPage
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const LoginPage(),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            'Login',
+                    Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "Already have an account? ",
                             style: TextStyle(
                               fontFamily: 'Poppins',
-                              color: beige,
-                              fontWeight: FontWeight.bold,
-                              decoration: TextDecoration.underline,
+                              color: JaikissanTheme.beige.withOpacity(0.65),
+                              fontSize: 14,
                             ),
                           ),
-                        ),
-                      ],
+                          GestureDetector(
+                            onTap: () => Navigator.pushNamed(context, '/login'),
+                            child: const Text(
+                              'Sign in',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                color: JaikissanTheme.beige,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                decoration: TextDecoration.underline,
+                                decorationColor: JaikissanTheme.beige,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
@@ -173,51 +269,20 @@ class SignUpPage extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildTextField(
-    String label,
-    String hint,
-    IconData icon,
-    Color textColor,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            color: textColor,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          style: TextStyle(fontFamily: 'Poppins', color: textColor),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(
-              fontFamily: 'Poppins',
-              color: textColor.withOpacity(0.6),
-            ),
-            prefixIcon: Icon(icon, color: textColor),
-            filled: true,
-            fillColor: Colors.white.withOpacity(0.1),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: textColor.withOpacity(0.3)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: textColor.withOpacity(0.3)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: textColor, width: 2),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
+  @override
+  Widget build(BuildContext context) => Text(
+    text,
+    style: TextStyle(
+      fontFamily: 'Poppins',
+      fontWeight: FontWeight.w700,
+      fontSize: 13,
+      color: JaikissanTheme.beige.withOpacity(0.5),
+      letterSpacing: 1.2,
+    ),
+  );
 }
