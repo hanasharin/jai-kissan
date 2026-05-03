@@ -1,150 +1,265 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'dashboard.dart'; // Import Dashboard for navigation
-import 'sign_up.dart'; // Import SignUpPage for navigation
+import 'package:flutter/services.dart';
+import 'theme.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  bool _obscure = true;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(statusBarIconBrightness: Brightness.light),
+    );
+  }
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    super.dispose();
+  }
+
+  void _login() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
+    await Future.delayed(const Duration(seconds: 1));
+    if (mounted) {
+      setState(() => _loading = false);
+      Navigator.pushReplacementNamed(context, '/dashboard');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final emerald = Theme.of(context).colorScheme.primary;
-    final beige = Theme.of(context).colorScheme.secondary;
-
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background image (fixed spelling)
+          // 2.0 bg image
           Image.asset('assets/images/emarald.jpg', fit: BoxFit.cover),
-          // Emerald overlay for readability
-          Container(color: emerald.withOpacity(0.6)),
+          Container(color: JaikissanTheme.emerald.withOpacity(0.65)),
 
-          // Foreground login container
-          Center(
+          SafeArea(
             child: SingleChildScrollView(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 32),
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: emerald.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: beige.withOpacity(0.3)),
-                ),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Form(
+                key: _formKey,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Login',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: beige,
+                    const SizedBox(height: 56),
+
+                    // Logo (1.0 style, 2.0 beige color)
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: JaikissanTheme.beige,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.eco_rounded,
+                        color: JaikissanTheme.emerald,
+                        size: 28,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
 
-                    _buildTextField(
-                      label: 'Username',
-                      hint: 'Enter your username',
-                      icon: Icons.person,
-                      textColor: beige,
+                    // 1.0 layout headline with 2.0 beige color
+                    Text(
+                      'Welcome\nback.',
+                      style: Theme.of(context).textTheme.displayMedium
+                          ?.copyWith(
+                            height: 1.15,
+                            letterSpacing: -1.2,
+                            color: JaikissanTheme.beige,
+                          ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Sign in to your account to continue.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: JaikissanTheme.beige.withOpacity(0.65),
+                      ),
+                    ),
+                    const SizedBox(height: 44),
 
-                    _buildTextField(
+                    // Fields styled with 2.0 glass feel
+                    GlassTextField(
+                      label: 'Email address',
+                      controller: _emailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      prefixIcon: Icons.mail_outline_rounded,
+                      validator: (v) => (v == null || !v.contains('@'))
+                          ? 'Enter a valid email'
+                          : null,
+                    ),
+                    const SizedBox(height: 14),
+                    GlassTextField(
                       label: 'Password',
-                      hint: 'Enter your password',
-                      icon: Icons.lock,
-                      obscureText: true,
-                      textColor: beige,
+                      controller: _passCtrl,
+                      obscure: _obscure,
+                      prefixIcon: Icons.lock_outline_rounded,
+                      suffix: IconButton(
+                        icon: Icon(
+                          _obscure
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          color: JaikissanTheme.beige.withOpacity(0.6),
+                          size: 20,
+                        ),
+                        onPressed: () => setState(() => _obscure = !_obscure),
+                      ),
+                      validator: (v) => (v == null || v.length < 6)
+                          ? 'Min 6 characters'
+                          : null,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
 
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {
-                          // TODO: Implement Forgot Password navigation
-                        },
+                        onPressed: () {},
                         child: Text(
-                          'Forgot Password?',
-                          style: TextStyle(fontFamily: 'Poppins', color: beige),
+                          'Forgot password?',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            color: JaikissanTheme.beige.withOpacity(0.8),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 24),
 
-                    ElevatedButton(
-                      onPressed: () {
-                        // Navigate to Dashboard after login
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const Dashboard(),
+                    // 1.0 JKButton layout, 2.0 beige-on-emerald flip for contrast on dark bg
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: _loading ? null : _login,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: JaikissanTheme.beige,
+                          foregroundColor: JaikissanTheme.emerald,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: beige,
-                        foregroundColor: emerald,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                          textStyle: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
                         ),
-                      ),
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.bold,
-                        ),
+                        child: _loading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: JaikissanTheme.emerald,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Sign In'),
                       ),
                     ),
                     const SizedBox(height: 16),
 
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          "Don't have an account?",
-                          style: TextStyle(fontFamily: 'Poppins', color: beige),
+                        Expanded(
+                          child: Divider(
+                            color: JaikissanTheme.beige.withOpacity(0.25),
+                          ),
                         ),
-                        TextButton(
-                          onPressed: () {
-                            // Navigate to SignUpPage
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const SignUpPage(),
-                              ),
-                            );
-                          },
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
                           child: Text(
-                            'Register Now',
+                            'or',
                             style: TextStyle(
                               fontFamily: 'Poppins',
-                              color: beige,
-                              fontWeight: FontWeight.bold,
-                              decoration: TextDecoration.underline,
+                              color: JaikissanTheme.beige.withOpacity(0.5),
+                              fontSize: 12,
                             ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            color: JaikissanTheme.beige.withOpacity(0.25),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Divider(color: beige.withOpacity(0.3)),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Terms and Services',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        color: beige,
-                        fontSize: 13,
+                    const SizedBox(height: 16),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: OutlinedButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.g_mobiledata_rounded, size: 22),
+                        label: const Text('Continue with Google'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: JaikissanTheme.beige,
+                          side: BorderSide(
+                            color: JaikissanTheme.beige.withOpacity(0.4),
+                            width: 1.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          textStyle: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
                       ),
                     ),
+                    const SizedBox(height: 32),
+
+                    Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "Don't have an account? ",
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              color: JaikissanTheme.beige.withOpacity(0.65),
+                              fontSize: 14,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () =>
+                                Navigator.pushNamed(context, '/signup'),
+                            child: const Text(
+                              'Sign up',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                color: JaikissanTheme.beige,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                decoration: TextDecoration.underline,
+                                decorationColor: JaikissanTheme.beige,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -154,53 +269,85 @@ class LoginPage extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildTextField({
-    required String label,
-    required String hint,
-    required IconData icon,
-    required Color textColor,
-    bool obscureText = false,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            color: textColor,
-            fontWeight: FontWeight.w600,
+/// Glass-style text field for dark bg pages (2.0 aesthetic)
+class GlassTextField extends StatelessWidget {
+  final String label;
+  final TextEditingController? controller;
+  final TextInputType? keyboardType;
+  final IconData? prefixIcon;
+  final Widget? suffix;
+  final bool obscure;
+  final String? Function(String?)? validator;
+
+  const GlassTextField({
+    super.key,
+    required this.label,
+    this.controller,
+    this.keyboardType,
+    this.prefixIcon,
+    this.suffix,
+    this.obscure = false,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscure,
+      keyboardType: keyboardType,
+      validator: validator,
+      style: const TextStyle(
+        fontFamily: 'Poppins',
+        fontSize: 15,
+        color: JaikissanTheme.beige,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(
+          fontFamily: 'Poppins',
+          color: JaikissanTheme.beige.withOpacity(0.7),
+          fontSize: 14,
+        ),
+        prefixIcon: prefixIcon != null
+            ? Icon(
+                prefixIcon,
+                color: JaikissanTheme.beige.withOpacity(0.6),
+                size: 20,
+              )
+            : null,
+        suffixIcon: suffix,
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.1),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: JaikissanTheme.beige.withOpacity(0.25),
+            width: 1.5,
           ),
         ),
-        const SizedBox(height: 8),
-        TextField(
-          obscureText: obscureText,
-          style: TextStyle(fontFamily: 'Poppins', color: textColor),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(
-              fontFamily: 'Poppins',
-              color: textColor.withOpacity(0.6),
-            ),
-            prefixIcon: Icon(icon, color: textColor),
-            filled: true,
-            fillColor: Colors.white.withOpacity(0.1),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: textColor.withOpacity(0.3)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: textColor.withOpacity(0.3)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: textColor, width: 2),
-            ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: JaikissanTheme.beige.withOpacity(0.25),
+            width: 1.5,
           ),
         ),
-      ],
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: JaikissanTheme.beige, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: JaikissanTheme.error, width: 1.5),
+        ),
+        errorStyle: const TextStyle(
+          fontFamily: 'Poppins',
+          color: Color(0xFFFF8A7A),
+        ),
+      ),
     );
   }
 }
